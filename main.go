@@ -8,18 +8,38 @@ import (
 	"os/signal"
 	"syscall"
 	"fmt"
+	"strings"
+	"regexp"
 )
 
 func main() {
 	flag.Parse()
 	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
-		parsed := os.ExpandEnv(string(fileBytes))
-		fmt.Println("Generated configfile\n", parsed)
-		fmt.Println("With environment:")
+
+		env := make(map[string]string)
 		for _, v := range os.Environ() {
-			fmt.Println("\t", v)
+			split := strings.Split(v, "=")
+
+			if len(split) < 2 {
+				continue
+			}
+
+			env[split[0]] = strings.Join(split[1:], "=")
 		}
 
+		parsed := regexp.MustCompile("\\${[^}]+}").ReplaceAllFunc(fileBytes, func(bytes []byte) []byte {
+			// Replace with lookup in environment file
+			return []byte(env[string(bytes[2:len(bytes) - 1])])
+		})
+
+		fmt.Println("Generated configfile\n", string(parsed))
+
+		fmt.Println("With environment:")
+		for k, v := range env {
+			fmt.Println("\t", k, "\t", v)
+		}
+
+		// Write the generated file to the desired location
 		fmt.Println("Writing configfile error", ioutil.WriteFile(flag.Arg(1), []byte(parsed), os.ModePerm))
 
 		done := make(chan bool, 1)
