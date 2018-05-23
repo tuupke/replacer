@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"flag"
 	"os"
 	"io/ioutil"
@@ -10,7 +9,7 @@ import (
 func main() {
 	flag.Parse()
 	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
-		fmt.Println(os.ExpandEnv(string(fileBytes)))
+		ioutil.WriteFile(flag.Arg(1), []byte(os.ExpandEnv(string(fileBytes))), os.ModePerm)
 	}
 }
 
