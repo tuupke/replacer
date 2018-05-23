@@ -7,12 +7,13 @@ import (
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"fmt"
 )
 
 func main() {
 	flag.Parse()
 	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
-		ioutil.WriteFile(flag.Arg(1), []byte(os.ExpandEnv(string(fileBytes))), os.ModePerm)
+		fmt.Println("Writing file status", ioutil.WriteFile(flag.Arg(1), []byte(os.ExpandEnv(string(fileBytes))), os.ModePerm))
 
 		done := make(chan bool, 1)
 
@@ -45,5 +46,7 @@ func main() {
 
 		// Await finishing of command
 		<- done
+	} else {
+		fmt.Println("Could not open basefile for parsing", err)
 	}
 }
