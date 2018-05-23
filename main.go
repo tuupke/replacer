@@ -15,6 +15,11 @@ func main() {
 	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
 		parsed := os.ExpandEnv(string(fileBytes))
 		fmt.Println("Generated configfile\n", parsed)
+		fmt.Println("With environment:")
+		for _, v := range os.Environ() {
+			fmt.Println("\t", v)
+		}
+
 		fmt.Println("Writing configfile error", ioutil.WriteFile(flag.Arg(1), []byte(parsed), os.ModePerm))
 
 		done := make(chan bool, 1)
