@@ -40,8 +40,8 @@ func main() {
 				}
 			}()
 
-			cmd.Start()
-			cmd.Wait()
+			fmt.Println("Start error", cmd.Start())
+			fmt.Println("Wait error", cmd.Wait())
 		}()
 
 		// Await finishing of command
