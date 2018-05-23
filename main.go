@@ -13,7 +13,9 @@ import (
 func main() {
 	flag.Parse()
 	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
-		fmt.Println("Writing file status", ioutil.WriteFile(flag.Arg(1), []byte(os.ExpandEnv(string(fileBytes))), os.ModePerm))
+		parsed := os.ExpandEnv(string(fileBytes))
+		fmt.Println("Generated configfile\n", parsed)
+		fmt.Println("Writing configfile error", ioutil.WriteFile(flag.Arg(1), []byte(parsed), os.ModePerm))
 
 		done := make(chan bool, 1)
 
