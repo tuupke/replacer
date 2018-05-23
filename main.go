@@ -30,8 +30,8 @@ func main() {
 			rest := flag.Args()[2:]
 
 			cmd := exec.Command(rest[0], rest[1:]...)
-			cmd.Stderr = ioutil.Discard
-			cmd.Stdout = ioutil.Discard
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
 
 			go func() {
 				for true {
