@@ -57,18 +57,36 @@ func main() {
 			rest := flag.Args()[2:]
 
 			cmd := exec.Command(rest[0], rest[1:]...)
+			if cmd == nil {
+				fmt.Println("Error starting command", rest[0])
+				os.Exit(41)
+			}
+
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
 			go func() {
 				for true {
 					s := <- sigs
+
+					if cmd.Process == nil {
+						os.Exit(42)
+					}
+
+					fmt.Println("About to send singnal", s.String())
 					cmd.Process.Signal(s)
 				}
 			}()
 
 			fmt.Println("Start error", cmd.Start())
 			fmt.Println("Wait error", cmd.Wait())
+
+			if err, ok := err.(*exec.ExitError); ok {
+				if status, ok := err.Sys().(syscall.WaitStatus); ok {
+					fmt.Printf("Exit Status: %d\n", status.ExitStatus())
+					os.Exit(status.ExitStatus())
+				}
+			}
 		}()
 
 		// Await finishing of command
