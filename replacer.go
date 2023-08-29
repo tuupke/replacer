@@ -2,20 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
-	"io/ioutil"
 	"os/exec"
 	"os/signal"
-	"syscall"
-	"fmt"
-	"strings"
-	"regexp"
 	"path/filepath"
+	"regexp"
+	"strings"
+	"syscall"
 )
 
 func main() {
 	flag.Parse()
-	if fileBytes, err := ioutil.ReadFile(flag.Arg(0)); err == nil {
+	if fileBytes, err := os.ReadFile(flag.Arg(0)); err == nil {
 
 		env := make(map[string]string)
 		for _, v := range os.Environ() {
@@ -28,7 +27,7 @@ func main() {
 			env[split[0]] = strings.Join(split[1:], "=")
 		}
 
-		parsed := regexp.MustCompile("\\${[^}]+}").ReplaceAllFunc(fileBytes, func(bytes []byte) []byte {
+		parsed := regexp.MustCompile(`\${[^}]+}`).ReplaceAllFunc(fileBytes, func(bytes []byte) []byte {
 			// Replace with lookup in environment file
 			return []byte(env[string(bytes[2:len(bytes)-1])])
 		})
@@ -41,12 +40,12 @@ func main() {
 		}
 
 		// Write the generated file to the desired location
-		fmt.Println("Writing configfile error", ioutil.WriteFile(flag.Arg(1), []byte(parsed), os.ModePerm))
+		fmt.Println("Writing configfile error", os.WriteFile(flag.Arg(1), parsed, os.ModePerm))
 
 		done := make(chan bool, 1)
 
 		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGABRT, syscall.SIGALRM, syscall.SIGBUS, syscall.SIGCHLD, syscall.SIGCONT, syscall.SIGFPE, syscall.SIGHUP, syscall.SIGILL, syscall.SIGINT, syscall.SIGIO, syscall.SIGIOT, syscall.SIGKILL, syscall.SIGPIPE, syscall.SIGPROF, syscall.SIGQUIT, syscall.SIGSEGV, syscall.SIGSTOP, syscall.SIGSYS, syscall.SIGTERM, syscall.SIGTRAP, syscall.SIGTSTP, syscall.SIGTTIN, syscall.SIGTTOU, syscall.SIGURG, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGVTALRM, syscall.SIGWINCH, syscall.SIGXCPU, syscall.SIGXFSZ)
+		signal.Notify(sigs, syscall.SIGABRT, syscall.SIGALRM, syscall.SIGBUS, syscall.SIGCHLD, syscall.SIGCONT, syscall.SIGFPE, syscall.SIGHUP, syscall.SIGILL, syscall.SIGINT, syscall.SIGIO, syscall.SIGIOT, syscall.SIGPIPE, syscall.SIGPROF, syscall.SIGQUIT, syscall.SIGSEGV, syscall.SIGSYS, syscall.SIGTERM, syscall.SIGTRAP, syscall.SIGTSTP, syscall.SIGTTIN, syscall.SIGTTOU, syscall.SIGURG, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGVTALRM, syscall.SIGWINCH, syscall.SIGXCPU, syscall.SIGXFSZ)
 
 		go func() {
 			defer func() { done <- true }()
@@ -67,7 +66,7 @@ func main() {
 			cmd.Stdout = os.Stdout
 
 			go func() {
-				for true {
+				for {
 					s := <-sigs
 
 					if cmd.Process == nil {
