@@ -45,7 +45,7 @@ func main() {
 		done := make(chan bool, 1)
 
 		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGABRT, syscall.SIGALRM, syscall.SIGBUS, syscall.SIGCHLD, syscall.SIGCONT, syscall.SIGFPE, syscall.SIGHUP, syscall.SIGILL, syscall.SIGINT, syscall.SIGIO, syscall.SIGIOT, syscall.SIGPIPE, syscall.SIGPROF, syscall.SIGQUIT, syscall.SIGSEGV, syscall.SIGSYS, syscall.SIGTERM, syscall.SIGTRAP, syscall.SIGTSTP, syscall.SIGTTIN, syscall.SIGTTOU, syscall.SIGURG, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGVTALRM, syscall.SIGWINCH, syscall.SIGXCPU, syscall.SIGXFSZ)
+		signal.Notify(sigs, syscall.SIGABRT, syscall.SIGALRM, syscall.SIGBUS, syscall.SIGCONT, syscall.SIGFPE, syscall.SIGHUP, syscall.SIGILL, syscall.SIGINT, syscall.SIGIO, syscall.SIGIOT, syscall.SIGPIPE, syscall.SIGPROF, syscall.SIGQUIT, syscall.SIGSEGV, syscall.SIGSYS, syscall.SIGTERM, syscall.SIGTRAP, syscall.SIGTSTP, syscall.SIGTTIN, syscall.SIGTTOU, syscall.SIGURG, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGVTALRM, syscall.SIGWINCH, syscall.SIGXCPU, syscall.SIGXFSZ)
 
 		go func() {
 			defer func() { done <- true }()
@@ -65,24 +65,21 @@ func main() {
 			cmd.Stderr = os.Stderr
 			cmd.Stdout = os.Stdout
 
+			fmt.Println("Start error", cmd.Start())
+
 			go func() {
 				for {
 					s := <-sigs
-
-					if cmd.Process == nil {
-						cleanAndExit(42)
-					}
-
 					fmt.Println("About to send singnal", s.String())
 					cmd.Process.Signal(s)
 				}
 			}()
 
-			fmt.Println("Start error", cmd.Start())
-			fmt.Println("Wait error", cmd.Wait())
+			waitErr := cmd.Wait()
+			fmt.Println("Wait error", waitErr)
 
-			if err, ok := err.(*exec.ExitError); ok {
-				if status, ok := err.Sys().(syscall.WaitStatus); ok {
+			if exitErr, ok := waitErr.(*exec.ExitError); ok {
+				if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
 					fmt.Printf("Exit Status: %d\n", status.ExitStatus())
 					cleanAndExit(status.ExitStatus())
 				}
